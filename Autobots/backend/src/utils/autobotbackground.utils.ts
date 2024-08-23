@@ -15,7 +15,6 @@ export function startBackgroundProcess(): void {
         console.log(`Total autobots generated: ${generatedAutobots}`);
       } catch (error) {
         console.error('Error generating autobot batch:', error);
-        // Implement retry logic here if needed
       }
     } else {
       console.log('Finished generating 500 autobots.');
@@ -25,6 +24,6 @@ export function startBackgroundProcess(): void {
 
   const intervalId = setInterval(generateBatch, interval);
 
-  // Start the first batch immediately
+  // Start the first batch immediately, this only runs once the app is started 
   generateBatch();
 }

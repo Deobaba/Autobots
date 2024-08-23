@@ -1,4 +1,4 @@
-import { AppDataSource } from '../config/database.config'; // Import your DataSource instance
+import { AppDataSource } from '../config/database.config'; 
 import axios from 'axios';
 import { Autobot } from '../models/Autobot.entity';
 import { Post } from '../models/Post.entity';

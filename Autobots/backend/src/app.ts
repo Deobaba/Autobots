@@ -2,6 +2,7 @@ import express from 'express';
 import { createDatabaseConnection } from './config/database.config';
 import { startBackgroundProcess } from './utils/autobotbackground.utils';
 import autobotRoutes from './routes/autobot.route';
+import cors from 'cors';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -12,6 +13,7 @@ createDatabaseConnection()
   .then(() => {
     console.log('Database connected successfully');
 
+    app.use(cors())
     app.use(express.json());
     app.use('/api', autobotRoutes);
 

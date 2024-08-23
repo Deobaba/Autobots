@@ -18,7 +18,19 @@ export class AutobotController {
     try {
       const autobotId = req.params.autobotId;
       const posts = await AutobotController.autobotService.getAutobotPosts(autobotId);
-      res.json(posts);
+      const simplifiedPosts = posts.map(post => {
+        return {
+            postid: post.postid,
+            title: post.title,
+            body: post.body,
+            userId: post.userId,
+            autobot: {
+                userid: post.autobot.userid,
+                name: post.autobot.name
+            }
+        };
+    });
+      res.json(simplifiedPosts);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching posts for autobot', error });
     }
@@ -28,7 +40,22 @@ export class AutobotController {
     try {
       const postId = req.params.postId;
       const comments = await AutobotController.autobotService.getPostComments(postId);
-      res.json(comments);
+      const simplifiedComments = comments.map(comment=>{
+        return{
+          commentid: comment.commentid,
+          body: comment.body,
+          name:comment.name,
+          email:comment.email,
+          postId:comment.postid,
+          "post":{
+            postid:comment.post.postid,
+            userId:comment.post.userId
+          }
+          
+          
+        }
+      })
+      res.json(simplifiedComments);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching comments for post', error });
     }
