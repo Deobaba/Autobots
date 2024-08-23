@@ -1,0 +1,1 @@
+export type FetchType = 'users' | 'posts' | 'comments';
