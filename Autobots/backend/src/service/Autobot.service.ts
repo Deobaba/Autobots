@@ -67,8 +67,15 @@ export class AutobotService {
   }
 
   private async createComments(posts: Post[]): Promise<Comment[]> {
-    const response = await this.fetchdata('comments')
-    return response.data.flatMap((commentData: JsonComment, index:number) => {
+    const [response1, response2] = await Promise.all([
+      this.fetchdata('comments'),
+      this.fetchdata('comments')
+  ]);
+
+   // Concatenate the two arrays of comments
+   const combinedCommentsData = response1.data.concat(response2.data);
+   
+    return combinedCommentsData.flatMap((commentData: JsonComment, index:number) => {
       const post = posts[Math.floor(index / 10)];
       const comment = new Comment();
       Object.assign(comment, commentData);
@@ -121,5 +128,32 @@ export class AutobotService {
   public async getAutobotCount(): Promise<number> {
     const autobotRepository = AppDataSource.getRepository(Autobot);
     return autobotRepository.count();
+  }
+
+  public async resetDatabase(): Promise<void> {
+   AppDataSource.getRepository(Comment);
+   AppDataSource.getRepository(Post);
+   AppDataSource.getRepository(Autobot);
+  
+    try {
+      // Start a transaction
+      await AppDataSource.transaction(async (transactionalEntityManager) => {
+        // Disable foreign key checks
+        await transactionalEntityManager.query('SET FOREIGN_KEY_CHECKS = 0;');
+  
+        // Delete records in the order of dependencies
+        await transactionalEntityManager.clear(Comment);
+        await transactionalEntityManager.clear(Post);
+        await transactionalEntityManager.clear(Autobot);
+  
+        // Enable foreign key checks
+        await transactionalEntityManager.query('SET FOREIGN_KEY_CHECKS = 1;');
+      });
+  
+      console.log("Database has been reset successfully.");
+    } catch (error) {
+      console.error("Failed to reset the database:", error);
+      throw new Error("Database reset failed.");
+    }
   }
 }

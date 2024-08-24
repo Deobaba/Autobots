@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AutobotService } from '../service/Autobot.service'; // Import your AutobotService
+import { startBackgroundProcess, stopBackgroundProcess } from '../utils/autobotbackground.utils';
 
 export class AutobotController {
   private static autobotService = AutobotService.getInstance(); // Use the service instance
@@ -69,4 +70,24 @@ export class AutobotController {
       res.status(500).json({ message: 'Error fetching autobot count', error });
     }
   }
+
+  public static startCreation(req: Request, res: Response) {
+    startBackgroundProcess();
+    res.status(200).json({ message: 'Autobot generation started' });
+  }
+
+  public static stopCreation(req: Request, res: Response){
+    stopBackgroundProcess();
+    res.status(200).json({ message: 'Autobot generation stopped' });
+  }
+
+ public static async resetDb(req: Request, res: Response)  {
+    try {
+      await AutobotController.autobotService.resetDatabase();
+      res.status(200).send('Database reset successfully.');
+    } catch (error) {
+      res.status(500).send('Failed to reset database.');
+    }
+  }
+
 }

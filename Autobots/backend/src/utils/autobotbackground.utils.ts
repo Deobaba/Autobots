@@ -1,6 +1,8 @@
 import { AutobotService } from '../service/Autobot.service';
 
-export function startBackgroundProcess(): void {
+let intervalId: NodeJS.Timeout | null = null;
+
+export function startBackgroundProcess(): NodeJS.Timeout {
   const totalAutobots = 500;
   const totalMinutes = 60;
   const batchSize = 10;
@@ -18,12 +20,26 @@ export function startBackgroundProcess(): void {
       }
     } else {
       console.log('Finished generating 500 autobots.');
-      clearInterval(intervalId);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     }
   };
 
-  const intervalId = setInterval(generateBatch, interval);
+  intervalId = setInterval(generateBatch, interval);
 
-  // Start the first batch immediately, this only runs once the app is started 
+  // Start the first batch immediately, this only runs once the app is started
   generateBatch();
+
+  return intervalId;
+}
+
+export function stopBackgroundProcess(): void {
+  if (intervalId) {
+    clearInterval(intervalId);
+    console.log('Autobot generation stopped.');
+    intervalId = null;
+  } else {
+    console.log('No active autobot generation to stop.');
+  }
 }

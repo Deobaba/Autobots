@@ -10,5 +10,9 @@ router.get('/autobots', AutobotController.getAutobots);
 router.get('/autobots/:autobotId/posts', AutobotController.getAutobotPosts);
 router.get('/posts/:postId/comments', AutobotController.getPostComments);
 router.get('/autobot-count', AutobotController.getAutobotCount);
+router.get('/start-autobot-generation',AutobotController.startCreation)
+router.get('/stop-autobot-generation', AutobotController.stopCreation)
+router.get('/reset-database', AutobotController.resetDb)
+
 
 export default router;
