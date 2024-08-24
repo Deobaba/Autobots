@@ -63,6 +63,7 @@ const stopCreation = async () => {
       }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+    clearInterval(intervalId); 
     toast.info('Autobot creation stopped');
   } catch (error) {
     console.error('Error stopping autobot creation:', error);

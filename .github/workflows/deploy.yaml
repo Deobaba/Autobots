@@ -1,21 +1,14 @@
 name: Deploy to EC2 on PR merge or push to main
 
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - main
   push:
     branches:
       - "main"
-
-  workflow_dispatch:
 
 jobs:
   deploy:
     name: Deployed to EC2
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     environment: production
 
