@@ -1,0 +1,73 @@
+name: Deploy to EC2 on PR merge or push to main
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+  push:
+    branches:
+      - "main"
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deployed to EC2
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    environment: production
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.ECR_REPO }}:latest .
+
+      - name: Get Remote Image Digest
+        id: remote-digest
+        run: |
+          url="${{ secrets.ECR_REPO }}:latest"
+          repo_name=$(echo $url | cut -d '/' -f 2- | cut -d ':' -f 1)
+
+          REMOTE_DIGEST=$(aws ecr describe-images \
+          --region ${{ secrets.AWS_REGION }} \
+          --repository-name $repo_name \
+          --image-ids imageTag=latest \
+          --query 'imageDetails[0].imageDigest' \
+          --output text)
+          echo "REMOTE_DIGEST=${REMOTE_DIGEST}" >> $GITHUB_ENV
+
+      - name: Get Local Image Digest
+        id: local-digest
+        run: |
+          LOCAL_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ secrets.ECR_REPO }}:latest | cut -d'@' -f2)
+          echo "LOCAL_DIGEST=${LOCAL_DIGEST}" >> $GITHUB_ENV
+
+      - name: Push Docker image to ECR Public
+        if: env.LOCAL_DIGEST != env.REMOTE_DIGEST
+        run: |
+          docker push ${{ secrets.ECR_REPO }}:latest
+
+      - name: Update ECS Service
+        run: |
+          aws ecs update-service --cluster ${{ secrets.ECS_CLUSTER }} --service ${{ secrets.ECS_SERVICE }} --force-new-deployment
